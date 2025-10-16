@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Train, Hotel, Clock, CheckCircle, AlertTriangle, LogOut } from "lucide-react";
+import { Train, Hotel, Clock, CheckCircle, AlertTriangle, LogOut, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import type { User, Session } from "@supabase/supabase-js";
@@ -142,17 +142,26 @@ const Dashboard = () => {
             <h1 className="text-4xl font-bold text-foreground mb-2">My Travel Dashboard</h1>
             <p className="text-muted-foreground">Track your integrated train and hotel bookings</p>
           </div>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Logout
-          </Button>
+          <div className="flex gap-3">
+            <Button onClick={() => navigate("/create-booking")}>
+              <Plus className="mr-2 h-4 w-4" />
+              New Booking
+            </Button>
+            <Button variant="outline" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </Button>
+          </div>
         </div>
 
         {bookings.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
               <p className="text-muted-foreground mb-4">No bookings found. Start planning your trip!</p>
-              <Button onClick={() => navigate("/")}>Back to Home</Button>
+              <Button onClick={() => navigate("/create-booking")}>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Your First Booking
+              </Button>
             </CardContent>
           </Card>
         ) : (
