@@ -1,4 +1,4 @@
-import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,7 +7,6 @@ import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const navigate = useNavigate();
-  const [isSignUp, setIsSignUp] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
@@ -28,12 +27,12 @@ const Index = () => {
               between railways and hotels for stress-free travel.
             </p>
             <div className="flex gap-4 justify-center">
-              <Button size="lg" onClick={() => navigate("/dashboard")} className="shadow-lg">
-                View Dashboard
+              <Button size="lg" onClick={() => navigate("/auth")} className="shadow-lg">
+                Get Started
                 <Train className="ml-2 h-4 w-4" />
               </Button>
-              <Button size="lg" variant="outline">
-                Learn More
+              <Button size="lg" variant="outline" onClick={() => navigate("/auth")}>
+                Login
               </Button>
             </div>
           </div>
@@ -175,7 +174,7 @@ const Index = () => {
           <p className="text-lg opacity-90">
             Join thousands of travelers who never worry about train delays affecting their hotel bookings
           </p>
-          <Button size="lg" variant="secondary" className="shadow-lg">
+          <Button size="lg" variant="secondary" className="shadow-lg" onClick={() => navigate("/auth")}>
             Get Started Now
             <CheckCircle2 className="ml-2 h-4 w-4" />
           </Button>
