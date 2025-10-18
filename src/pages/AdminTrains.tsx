@@ -264,17 +264,29 @@ const AdminTrains = () => {
                         {train.status.replace('_', ' ')}
                       </span>
                     </TableCell>
-                    <TableCell>{train.delay_minutes || 0}</TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={train.delay_minutes || 0}
+                        onChange={(e) => {
+                          const newDelay = parseInt(e.target.value) || 0;
+                          updateTrainStatus(train.id, newDelay > 0 ? "delayed" : "on_time", newDelay);
+                        }}
+                        className="w-20"
+                      />
+                    </TableCell>
                     <TableCell>
                       <Select
+                        value={train.status}
                         onValueChange={(value) => {
                           const status = value as "on_time" | "delayed" | "cancelled";
-                          const delay = status === 'on_time' ? 0 : train.delay_minutes;
+                          const delay = status === 'on_time' ? 0 : train.delay_minutes || 0;
                           updateTrainStatus(train.id, status, delay);
                         }}
                       >
                         <SelectTrigger className="w-32">
-                          <SelectValue placeholder="Update" />
+                          <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="on_time">On Time</SelectItem>
