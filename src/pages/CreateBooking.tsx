@@ -5,11 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Train, Hotel } from "lucide-react";
+import { ArrowLeft, Train, Hotel, CalendarIcon } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface Train {
   id: string;
@@ -37,8 +40,8 @@ const CreateBooking = () => {
 
   const [selectedTrain, setSelectedTrain] = useState("");
   const [selectedHotel, setSelectedHotel] = useState("");
-  const [checkinDate, setCheckinDate] = useState("");
-  const [checkoutDate, setCheckoutDate] = useState("");
+  const [checkinDate, setCheckinDate] = useState<Date>();
+  const [checkoutDate, setCheckoutDate] = useState<Date>();
   const [notes, setNotes] = useState("");
 
   useEffect(() => {
@@ -86,7 +89,7 @@ const CreateBooking = () => {
       return;
     }
 
-    if (new Date(checkoutDate) <= new Date(checkinDate)) {
+    if (checkoutDate <= checkinDate) {
       toast({
         variant: "destructive",
         title: "Invalid Dates",
@@ -132,7 +135,7 @@ const CreateBooking = () => {
 
       // Calculate total amount (simplified pricing)
       const nights = Math.ceil(
-        (new Date(checkoutDate).getTime() - new Date(checkinDate).getTime()) / (1000 * 60 * 60 * 24)
+        (checkoutDate.getTime() - checkinDate.getTime()) / (1000 * 60 * 60 * 24)
       );
       const totalAmount = nights * 2500; // ₹2500 per night
 
@@ -141,8 +144,8 @@ const CreateBooking = () => {
         passenger_id: passengerId,
         train_id: selectedTrain,
         hotel_id: selectedHotel,
-        original_checkin: checkinDate,
-        original_checkout: checkoutDate,
+        original_checkin: checkinDate.toISOString(),
+        original_checkout: checkoutDate.toISOString(),
         total_amount: totalAmount,
         notes: notes || null,
         status: "confirmed",
@@ -233,27 +236,62 @@ const CreateBooking = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="checkin">Check-in Date *</Label>
-                    <Input
-                      id="checkin"
-                      type="date"
-                      value={checkinDate}
-                      onChange={(e) => setCheckinDate(e.target.value)}
-                      min={new Date().toISOString().split("T")[0]}
-                      required
-                    />
+                    <Label>Check-in Date *</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !checkinDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {checkinDate ? format(checkinDate, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={checkinDate}
+                          onSelect={setCheckinDate}
+                          disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="checkout">Check-out Date *</Label>
-                    <Input
-                      id="checkout"
-                      type="date"
-                      value={checkoutDate}
-                      onChange={(e) => setCheckoutDate(e.target.value)}
-                      min={checkinDate || new Date().toISOString().split("T")[0]}
-                      required
-                    />
+                    <Label>Check-out Date *</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !checkoutDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {checkoutDate ? format(checkoutDate, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={checkoutDate}
+                          onSelect={setCheckoutDate}
+                          disabled={(date) => 
+                            date < new Date(new Date().setHours(0, 0, 0, 0)) || 
+                            (checkinDate ? date <= checkinDate : false)
+                          }
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 </div>
 
@@ -269,14 +307,14 @@ const CreateBooking = () => {
                 </div>
               </div>
 
-              {checkinDate && checkoutDate && new Date(checkoutDate) > new Date(checkinDate) && (
+              {checkinDate && checkoutDate && checkoutDate > checkinDate && (
                 <div className="p-4 bg-primary/5 rounded-lg">
                   <p className="text-sm text-muted-foreground">
                     Estimated Total:{" "}
                     <span className="text-lg font-bold text-foreground">
                       ₹
                       {Math.ceil(
-                        (new Date(checkoutDate).getTime() - new Date(checkinDate).getTime()) /
+                        (checkoutDate.getTime() - checkinDate.getTime()) /
                           (1000 * 60 * 60 * 24)
                       ) * 2500}
                     </span>
