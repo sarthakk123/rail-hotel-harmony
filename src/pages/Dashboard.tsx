@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import type { User, Session } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
+import { AdminButton } from "@/components/AdminButton";
 
 interface Booking {
   id: string;
@@ -143,6 +144,7 @@ const Dashboard = () => {
             <p className="text-muted-foreground">Track your integrated train and hotel bookings</p>
           </div>
           <div className="flex gap-3">
+            <AdminButton userId={user?.id} />
             <Button onClick={() => navigate("/create-booking")}>
               <Plus className="mr-2 h-4 w-4" />
               New Booking
