@@ -15,7 +15,7 @@ const signupSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   fullName: z.string().min(2, "Name must be at least 2 characters"),
   phone: z.string().optional(),
-  role: z.enum(["customer", "hotel", "admin"]),
+  role: z.enum(["customer", "hotel"]),
 });
 
 const loginSchema = z.object({
@@ -37,7 +37,7 @@ const Auth = () => {
   const [signupPassword, setSignupPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
-  const [role, setRole] = useState<"customer" | "hotel" | "admin">("customer");
+  const [role, setRole] = useState<"customer" | "hotel">("customer");
 
   useEffect(() => {
     // Check if user is already logged in
@@ -175,9 +175,7 @@ const Auth = () => {
       });
       
       // Redirect based on role
-      if (role === "admin") {
-        navigate("/admin");
-      } else if (role === "hotel") {
+      if (role === "hotel") {
         navigate("/hotel-dashboard");
       } else {
         navigate("/dashboard");
@@ -283,11 +281,10 @@ const Auth = () => {
                     id="role"
                     className="w-full px-3 py-2 border rounded-md bg-background"
                     value={role}
-                    onChange={(e) => setRole(e.target.value as "customer" | "hotel" | "admin")}
+                    onChange={(e) => setRole(e.target.value as "customer" | "hotel")}
                   >
                     <option value="customer">Customer</option>
                     <option value="hotel">Hotel Manager</option>
-                    <option value="admin">Administrator</option>
                   </select>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
