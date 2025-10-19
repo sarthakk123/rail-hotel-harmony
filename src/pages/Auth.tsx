@@ -15,6 +15,7 @@ const signupSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   fullName: z.string().min(2, "Name must be at least 2 characters"),
   phone: z.string().optional(),
+  role: z.enum(["customer", "hotel", "admin"]),
 });
 
 const loginSchema = z.object({
@@ -36,12 +37,25 @@ const Auth = () => {
   const [signupPassword, setSignupPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [role, setRole] = useState<"customer" | "hotel" | "admin">("customer");
 
   useEffect(() => {
     // Check if user is already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
-        navigate("/dashboard");
+        // Check user role and redirect accordingly
+        const { data: roles } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", session.user.id);
+
+        if (roles?.some(r => r.role === "admin")) {
+          navigate("/admin");
+        } else if (roles?.some(r => r.role === "hotel")) {
+          navigate("/hotel-dashboard");
+        } else {
+          navigate("/dashboard");
+        }
       }
     });
   }, [navigate]);
@@ -61,7 +75,7 @@ const Auth = () => {
 
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: loginEmail,
       password: loginPassword,
     });
@@ -79,7 +93,22 @@ const Auth = () => {
         title: "Welcome back!",
         description: "Successfully logged in.",
       });
-      navigate("/dashboard");
+      
+      // Check user role and redirect accordingly
+      if (data.user) {
+        const { data: roles } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", data.user.id);
+
+        if (roles?.some(r => r.role === "admin")) {
+          navigate("/admin");
+        } else if (roles?.some(r => r.role === "hotel")) {
+          navigate("/hotel-dashboard");
+        } else {
+          navigate("/dashboard");
+        }
+      }
     }
   };
 
@@ -91,6 +120,7 @@ const Auth = () => {
       password: signupPassword,
       fullName,
       phone,
+      role,
     });
 
     if (!validation.success) {
@@ -104,7 +134,7 @@ const Auth = () => {
 
     setLoading(true);
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: signupEmail,
       password: signupPassword,
       options: {
@@ -125,10 +155,33 @@ const Auth = () => {
         description: error.message,
       });
     } else {
+      // Insert user role
+      if (data.user) {
+        const { error: roleError } = await supabase
+          .from("user_roles")
+          .insert({
+            user_id: data.user.id,
+            role: role,
+          });
+
+        if (roleError) {
+          console.error("Error creating user role:", roleError);
+        }
+      }
+      
       toast({
         title: "Account Created!",
         description: "You can now log in with your credentials.",
       });
+      
+      // Redirect based on role
+      if (role === "admin") {
+        navigate("/admin");
+      } else if (role === "hotel") {
+        navigate("/hotel-dashboard");
+      } else {
+        navigate("/dashboard");
+      }
     }
   };
 
@@ -223,6 +276,19 @@ const Auth = () => {
                     onChange={(e) => setSignupPassword(e.target.value)}
                     required
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="role">Account Type</Label>
+                  <select
+                    id="role"
+                    className="w-full px-3 py-2 border rounded-md bg-background"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value as "customer" | "hotel" | "admin")}
+                  >
+                    <option value="customer">Customer</option>
+                    <option value="hotel">Hotel Manager</option>
+                    <option value="admin">Administrator</option>
+                  </select>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Creating account..." : "Create Account"}
