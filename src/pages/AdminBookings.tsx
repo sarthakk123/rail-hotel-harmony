@@ -164,25 +164,25 @@ const AdminBookings = () => {
                         </TableCell>
                         <TableCell>
                           <div>
-                            <div className="font-medium">{booking.passengers.full_name}</div>
+                            <div className="font-medium">{booking.passengers?.full_name || 'N/A'}</div>
                             <div className="text-xs text-muted-foreground">
-                              {booking.passengers.email}
+                              {booking.passengers?.email || 'N/A'}
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div>
-                            <div className="font-medium">{booking.trains.train_name}</div>
+                            <div className="font-medium">{booking.trains?.train_name || 'N/A'}</div>
                             <div className="text-xs text-muted-foreground">
-                              {booking.trains.train_number}
+                              {booking.trains?.train_number || 'N/A'}
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div>
-                            <div className="font-medium">{booking.hotels.hotel_name}</div>
+                            <div className="font-medium">{booking.hotels?.hotel_name || 'N/A'}</div>
                             <div className="text-xs text-muted-foreground">
-                              {booking.hotels.location}
+                              {booking.hotels?.location || 'N/A'}
                             </div>
                           </div>
                         </TableCell>
