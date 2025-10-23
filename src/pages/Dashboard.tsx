@@ -2,12 +2,22 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Train, Hotel, Clock, CheckCircle, AlertTriangle, LogOut, Plus } from "lucide-react";
+import { Train, Hotel, Clock, CheckCircle, AlertTriangle, LogOut, Plus, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import type { User, Session } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
 import { AdminButton } from "@/components/AdminButton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Booking {
   id: string;
@@ -36,6 +46,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [cancelBookingId, setCancelBookingId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -110,6 +121,36 @@ const Dashboard = () => {
       description: "You have been successfully logged out.",
     });
     navigate("/");
+  };
+
+  const handleCancelBooking = async () => {
+    if (!cancelBookingId) return;
+
+    try {
+      const { error } = await supabase
+        .from("bookings")
+        .update({ status: "cancelled" })
+        .eq("id", cancelBookingId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Booking Cancelled",
+        description: "Your booking has been successfully cancelled.",
+      });
+
+      // Refresh bookings
+      fetchBookings();
+    } catch (error) {
+      console.error("Error cancelling booking:", error);
+      toast({
+        title: "Error",
+        description: "Failed to cancel booking. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setCancelBookingId(null);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -233,9 +274,21 @@ const Dashboard = () => {
                     <p className="text-sm text-muted-foreground">
                       Total Amount: <span className="font-bold text-foreground">₹{booking.total_amount}</span>
                     </p>
-                    <Button variant="outline" size="sm">
-                      View Details
-                    </Button>
+                    <div className="flex gap-2">
+                      {booking.status !== "cancelled" && (
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => setCancelBookingId(booking.id)}
+                        >
+                          <XCircle className="mr-2 h-4 w-4" />
+                          Cancel Booking
+                        </Button>
+                      )}
+                      <Button variant="outline" size="sm">
+                        View Details
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -243,6 +296,23 @@ const Dashboard = () => {
           </div>
         )}
       </div>
+
+      <AlertDialog open={!!cancelBookingId} onOpenChange={() => setCancelBookingId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Booking?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to cancel this booking? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No, Keep Booking</AlertDialogCancel>
+            <AlertDialogAction onClick={handleCancelBooking}>
+              Yes, Cancel Booking
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
