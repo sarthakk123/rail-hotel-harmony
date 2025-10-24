@@ -277,7 +277,19 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      booking_analytics: {
+        Row: {
+          cancelled_bookings: number | null
+          confirmed_bookings: number | null
+          confirmed_revenue: number | null
+          hotels_used: number | null
+          total_bookings: number | null
+          total_revenue: number | null
+          trains_used: number | null
+          unique_passengers: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
