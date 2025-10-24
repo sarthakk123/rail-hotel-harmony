@@ -140,7 +140,7 @@ const CreateBooking = () => {
       const totalAmount = nights * 2500; // ₹2500 per night
 
       // Create booking
-      const { error: bookingError } = await supabase.from("bookings").insert({
+      const { data: booking, error: bookingError } = await supabase.from("bookings").insert({
         passenger_id: passengerId,
         train_id: selectedTrain,
         hotel_id: selectedHotel,
@@ -149,9 +149,16 @@ const CreateBooking = () => {
         total_amount: totalAmount,
         notes: notes || null,
         status: "confirmed",
-      });
+      }).select().single();
 
       if (bookingError) throw bookingError;
+
+      // Send confirmation notification
+      if (booking) {
+        await supabase.functions.invoke("send-booking-notification", {
+          body: { bookingId: booking.id, type: "confirmation" }
+        });
+      }
 
       toast({
         title: "Success!",

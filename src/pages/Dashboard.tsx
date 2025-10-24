@@ -50,6 +50,35 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Real-time train status updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('train-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'trains'
+        },
+        (payload) => {
+          console.log('Train status updated:', payload);
+          // Refresh bookings when train status changes
+          fetchBookings();
+          
+          toast({
+            title: "Train Status Updated",
+            description: "One of your trains has a status update.",
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -133,6 +162,11 @@ const Dashboard = () => {
         .eq("id", cancelBookingId);
 
       if (error) throw error;
+
+      // Send cancellation notification
+      await supabase.functions.invoke("send-booking-notification", {
+        body: { bookingId: cancelBookingId, type: "cancellation" }
+      });
 
       toast({
         title: "Booking Cancelled",
